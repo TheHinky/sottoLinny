@@ -15,7 +15,21 @@ client_dir="$state_dir/client"
 mkdir -p "$state_dir"
 chmod 700 "$state_dir"
 
+launch_linux_client() {
+    local client_dir="$project_dir/apps/linux-client"
+    if [[ "$skip_build" != true || ! -f "$client_dir/dist/main/main.js" ]]; then
+        bun run build:linux-client > /dev/null
+    fi
+    if [[ "$server_port" != 8391 ]]; then
+        printf 'Set the client endpoint to http://127.0.0.1:%s.\n' "$server_port"
+    fi
+    # Detached so closing this terminal leaves the client running, like `open` on macOS.
+    (cd "$client_dir" && nohup bun run start >> "$state_dir/client.log" 2>&1 < /dev/null &)
+    printf 'Client log: %s\n' "$state_dir/client.log"
+}
+
 launch_client() {
+    if [[ "$(uname -s)" == Linux ]]; then launch_linux_client; return; fi
     [[ "$(uname -s)" == Darwin ]] || return 0
     local client_app="$project_dir/build/Sotto Dev.app"
     if [[ ! -x "$client_app/Contents/MacOS/Sotto" ]]; then
@@ -123,6 +137,10 @@ if [[ "$skip_build" != true ]]; then
     ./scripts/build-server.sh
     if [[ "$(uname -s)" == Darwin ]]; then ./scripts/build-dev-app.sh; fi
 fi
+if [[ "$(uname -s)" == Linux ]] && ! command -v bun > /dev/null; then
+    printf 'Bun is required to run the Linux client.\n' >&2
+    exit 1
+fi
 if [[ ! -x "$server_binary" ]]; then
     printf 'Build the server first with scripts/build-server.sh.\n' >&2
     exit 1
@@ -135,9 +153,14 @@ if [[ "$(uname -s)" == Darwin ]]; then
     # are never imported from the installed app.
     speech_model="${speech_model:-$HOME/Library/Application Support/Murmur/Models/ggml-large-v3-turbo.bin}"
     proof_model="${proof_model:-$HOME/.murmur/models/Qwen3-4B-Instruct-2507-MLX-4bit}"
+else
+    # Linux: weights installed by scripts/setup-linux-server.sh.
+    speech_model="${speech_model:-$state_dir/models/ggml-large-v3-turbo.bin}"
+    proof_model="${proof_model:-$state_dir/models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf}"
 fi
 if [[ ! -f "$speech_model" || ! -e "$proof_model" ]]; then
     printf 'Set SOTTO_SPEECH_MODEL and SOTTO_TEXT_MODEL to installed Whisper and Qwen weights.\n' >&2
+    if [[ "$(uname -s)" == Linux ]]; then printf 'On Linux, run scripts/setup-linux-server.sh first.\n' >&2; fi
     exit 1
 fi
 server_args=(--host 127.0.0.1 --port "$server_port" --dev

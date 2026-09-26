@@ -23,6 +23,13 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 
 Use the repository's Bun 1.4.2. Keep the existing server running separately.
 
+To run a local server on this Linux machine (one-time build plus ~4 GB of pinned weights, then start/stop):
+
+```sh
+./scripts/setup-linux-server.sh
+./scripts/run-dev.sh start --skip-build   # starts server + this client; also status, stop, restart
+```
+
 ```sh
 bun install --frozen-lockfile
 bun run dev:linux-client
