@@ -32,6 +32,9 @@ if [[ "${SOTTO_SKIP_NATIVE:-0}" != 1 && \
 fi
 
 native_flags=(-DCMAKE_BUILD_TYPE=Release "-DSOTTO_CUDA=${SOTTO_CUDA:-OFF}")
+# Vulkan is per helper so speech can use the GPU while proofreading stays on CPU.
+speech_flags=("-DSOTTO_VULKAN=${SOTTO_VULKAN:-OFF}")
+text_flags=("-DSOTTO_TEXT_VULKAN=${SOTTO_TEXT_VULKAN:-OFF}")
 if [[ "$server_platform" == Darwin ]]; then
     if [[ "$server_architecture" != arm64 ]]; then
         printf 'The macOS server uses MLX and requires Apple Silicon.\n' >&2
@@ -56,13 +59,13 @@ if [[ "${SOTTO_SKIP_NATIVE:-0}" == 1 ]]; then
     text_helper_dir=$(dirname "$text_helper")
     vad_model="$SOTTO_VAD_PATH"
 else
-    cmake -S . -B .build/server-native "${native_flags[@]}"
+    cmake -S . -B .build/server-native "${native_flags[@]}" "${speech_flags[@]}"
     cmake --build .build/server-native --target sotto-engine --parallel "$build_jobs"
     if [[ "$server_platform" == Darwin ]]; then
         ./scripts/build-text-engine.sh
         text_helper_dir="$project_dir/.build/text-native"
     else
-        cmake -S TextEngine -B .build/server-llama "${native_flags[@]}"
+        cmake -S TextEngine -B .build/server-llama "${native_flags[@]}" "${text_flags[@]}"
         cmake --build .build/server-llama --target sotto-text-engine --parallel "$build_jobs"
         text_helper_dir="$project_dir/.build/server-llama"
     fi
