@@ -63,7 +63,9 @@ function fixture(
     id,
     client,
     () => {},
-    (text) => copied.push(text),
+    (text) => {
+      copied.push(text);
+    },
   );
   return { session, client, calls, copied };
 }

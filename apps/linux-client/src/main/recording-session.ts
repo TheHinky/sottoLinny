@@ -27,7 +27,7 @@ export class RecordingSession {
     readonly id: string,
     private readonly client: SottoServerClient,
     private readonly emit: (event: ClientEvent) => void,
-    private readonly copy: (text: string) => void,
+    private readonly copy: (text: string) => void | Promise<void>,
   ) {}
 
   start() {
@@ -111,9 +111,10 @@ export class RecordingSession {
       );
     this.controller.signal.throwIfAborted();
     if (generation.status !== "completed") throw new Error(generation.error || "Recording failed.");
-    // No async gap between the cancellation check and clipboard mutation.
+    // Copy starts synchronously after the cancellation check; it is not undone
+    // if cancel arrives while the external clipboard tool is running.
     const transcript = generation.finalText;
-    if (transcript) this.copy(transcript);
+    if (transcript) await this.copy(transcript);
     this.state = "completed";
     const result: RecordingResult = { transcript, delivery: transcript ? "copied" : "none" };
     // A delivery receipt must not delay the completed result or a later take.

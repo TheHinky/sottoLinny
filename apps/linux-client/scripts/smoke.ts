@@ -36,6 +36,7 @@ try {
       "--use-fake-device-for-media-stream",
       "--use-fake-ui-for-media-stream",
     ],
+    env: { ...process.env, SOTTO_ELECTRON_CLIPBOARD: "1" },
     timeout: 20000,
   });
   await application.evaluate(({ clipboard }) => {

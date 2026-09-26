@@ -17,7 +17,7 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 - Capture limited to 179 seconds or the original-stream byte budget, whichever is smaller
 - Explicit final-audio acknowledgement before finishing uploads
 - Runtime request/response validation and bounded HTTP/NDJSON reads
-- Clipboard delivery from the main process; silence leaves the clipboard unchanged
+- Clipboard delivery from the main process via `wl-copy` (Wayland only lets focused windows set the clipboard, so Electron alone fails while dictating into another app; falls back to Electron without `wl-clipboard`); silence leaves the clipboard unchanged
 - HTTP restricted to loopback and literal Tailscale addresses; HTTPS elsewhere
 
 “Original” here means Chromium/Web Audio float32 PCM at the AudioContext rate. It is **not guaranteed untouched hardware audio**. Browser processing/resampling and device selection need real-microphone testing.

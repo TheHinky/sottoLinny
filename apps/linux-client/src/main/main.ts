@@ -3,7 +3,6 @@ import { pathToFileURL } from "node:url";
 import {
   app,
   BrowserWindow,
-  clipboard,
   ipcMain,
   Menu,
   Notification,
@@ -12,6 +11,7 @@ import {
   type IpcMainInvokeEvent,
 } from "electron";
 import { z } from "zod";
+import { copyText } from "./clipboard.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
 import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
 import { RecordingSession } from "./recording-session.js";
@@ -169,7 +169,7 @@ ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown)
       if (session === current && !window?.isDestroyed())
         window?.webContents.send("sotto:event", sessionID, value);
     },
-    (text) => clipboard.writeText(text),
+    copyText,
   );
   session = current;
   setPhase("recording");
