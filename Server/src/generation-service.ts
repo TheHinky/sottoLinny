@@ -82,7 +82,7 @@ export const defaultPreferences = (): PreferencesSnapshot => ({
     proofreadingPrompt: defaultProofreadingPrompt,
     vocabulary: "",
     dictionary: copy(defaultDictionary),
-    textCorrectionEnabled: true,
+    textCorrectionEnabled: false,
     keepOriginalAudio: true,
   },
 });

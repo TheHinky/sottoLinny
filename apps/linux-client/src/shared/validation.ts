@@ -65,4 +65,12 @@ export const receiptSchema = z.object({
   nextSequence: z.number().int().nonnegative(),
   frameCount: z.number().int().nonnegative(),
 });
+// Only the proofreading flag is interpreted; other shared preferences pass through
+// untouched so a toggle never drops fields this client does not know about.
+export const preferencesSchema = z
+  .object({
+    revision: z.number().int().nonnegative(),
+    preferences: z.object({ textCorrectionEnabled: z.boolean() }).passthrough(),
+  })
+  .strict();
 export const errorSchema = z.object({ message: z.string() });

@@ -4,6 +4,7 @@ import {
   errorSchema,
   generationSchema,
   healthSchema,
+  preferencesSchema,
   receiptSchema,
 } from "../shared/validation.js";
 import { normalizeServerEndpoint } from "./endpoint.js";
@@ -42,6 +43,20 @@ export class SottoServerClient {
   }
   health(signal?: AbortSignal) {
     return this.json("v1/health", healthSchema, {}, signal);
+  }
+  // Read-modify-write with the server's revision check, so a concurrent edit from
+  // another client fails with 409 instead of being overwritten.
+  async setProofreading(enabled: boolean) {
+    const snapshot = await this.json("v1/preferences", preferencesSchema);
+    snapshot.preferences.textCorrectionEnabled = enabled;
+    const updated = await this.json("v1/preferences", preferencesSchema, {
+      method: "PUT",
+      body: JSON.stringify(snapshot),
+    });
+    return updated.preferences.textCorrectionEnabled;
+  }
+  async proofreading() {
+    return (await this.json("v1/preferences", preferencesSchema)).preferences.textCorrectionEnabled;
   }
   create(requestID: string) {
     // Once creation is sent, observe its response even if the take is cancelled,

@@ -77,6 +77,7 @@ async function setup(inference = new FakeInference()) {
   );
   resources.push({ service, path });
   const preferences = await service.getPreferences();
+  expect(preferences.preferences.textCorrectionEnabled).toBe(false);
   preferences.preferences.keepOriginalAudio = false;
   await service.updatePreferences(preferences);
   return { service, path, inference };
@@ -176,6 +177,9 @@ test("seals WAV, completes pipeline, delivery, artifact and history deletion", a
 test("proofreading failure preserves deterministic transcript", async () => {
   const { service, inference } = await setup();
   inference.failProof = true;
+  const preferences = await service.getPreferences();
+  preferences.preferences.textCorrectionEnabled = true;
+  await service.updatePreferences(preferences);
   const record = await upload(service);
   await service.finish(record.id, { inferenceFrames: 4000 });
   const final = await completed(service, record.id);

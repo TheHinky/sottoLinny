@@ -18,12 +18,16 @@ function element(id: string) {
 }
 const endpoint = input("endpoint"),
   token = input("token"),
-  deviceName = input("device-name");
+  deviceName = input("device-name"),
+  proofreading = input("proofreading");
 const startButton = button("start"),
   stopButton = button("stop"),
   cancelButton = button("cancel");
 const status = element("status"),
-  transcript = element("transcript");
+  transcript = element("transcript"),
+  proofreadingNote = element("proofreading-note");
+let proofreadingBusy = false,
+  proofreadingKnown = false;
 interface Take {
   id: string;
   cancelled: boolean;
@@ -43,8 +47,9 @@ function controls() {
   stopButton.disabled = active?.phase !== "recording" || active.cancelled;
   cancelButton.disabled = !active || active.cancelled;
   endpoint.disabled = token.disabled = deviceName.disabled = !!active;
+  proofreading.disabled = !!active || proofreadingBusy || !proofreadingKnown;
 }
-function configuration(): ClientConfiguration {
+function configuration(clearToken = true): ClientConfiguration {
   const deviceID = localStorage.getItem("sotto.device-id") || `linux-${crypto.randomUUID()}`;
   localStorage.setItem("sotto.device-id", deviceID);
   const configuration = {
@@ -53,7 +58,7 @@ function configuration(): ClientConfiguration {
     deviceID,
     deviceName: deviceName.value.trim() || "KDE desktop",
   };
-  token.value = ""; // This prototype does not persist credentials.
+  if (clearToken) token.value = ""; // This prototype does not persist credentials.
   return configuration;
 }
 function message(error: unknown) {
@@ -231,6 +236,31 @@ startButton.addEventListener("click", async () => {
     if (!take.cancelled) await cancel(take, message(error));
   }
 });
+// Proofreading is a shared server preference: read it from the server rather
+// than storing a local copy, and re-read it whenever the endpoint changes.
+async function syncProofreading(enabled?: boolean) {
+  proofreadingBusy = true;
+  controls();
+  try {
+    proofreading.checked = await window.sotto.proofreading(configuration(false), enabled);
+    proofreadingKnown = true;
+    proofreadingNote.textContent = "Shared server setting. Slow on CPU-only servers.";
+  } catch (error) {
+    if (enabled !== undefined) proofreading.checked = !enabled;
+    proofreadingKnown = enabled !== undefined && proofreadingKnown;
+    proofreadingNote.textContent = `Could not ${enabled === undefined ? "load" : "save"} setting: ${message(error)}`;
+  } finally {
+    proofreadingBusy = false;
+    controls();
+  }
+}
+proofreading.addEventListener("change", () => void syncProofreading(proofreading.checked));
+endpoint.addEventListener("change", () => void syncProofreading());
+token.addEventListener("change", () => void syncProofreading());
+// Retry after the server comes up (e.g. the client was launched first).
+window.addEventListener("focus", () => {
+  if (!proofreadingKnown && !proofreadingBusy && !active) void syncProofreading();
+});
 stopButton.addEventListener("click", () => {
   if (active) void finish(active);
 });
@@ -245,3 +275,4 @@ window.sotto.onEvent((id, event) => {
   if (event.type === "failed") status.textContent = event.message;
 });
 controls();
+void syncProofreading();

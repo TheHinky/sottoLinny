@@ -148,3 +148,22 @@ button:disabled {
   line-height: 1.55;
   white-space: pre-wrap;
 }
+
+.toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: auto;
+  margin: 3px 0 0;
+}
+
+.toggle small {
+  display: block;
+  margin-top: 3px;
+  color: #8f97a6;
+  font-weight: 400;
+}

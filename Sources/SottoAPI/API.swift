@@ -53,7 +53,7 @@ public struct ServerPreferences: Codable, Equatable, Sendable {
         """
     public static let supportedLanguages = ["en", "auto", "es", "fr", "de", "it", "pt", "nl", "ja", "zh", "ko", "hi", "ar", "pl", "ru", "uk", "sv"]
     public init(language: String = "en", proofreadingPrompt: String = Self.defaultProofreadingPrompt, vocabulary: String = "",
-                dictionary: PersonalDictionary = .default, textCorrectionEnabled: Bool = true,
+                dictionary: PersonalDictionary = .default, textCorrectionEnabled: Bool = false,
                 keepOriginalAudio: Bool = true) {
         self.language = language; self.proofreadingPrompt = proofreadingPrompt; self.vocabulary = vocabulary
         self.dictionary = dictionary; self.textCorrectionEnabled = textCorrectionEnabled

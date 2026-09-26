@@ -13,6 +13,10 @@ const api = {
   ): Promise<{ keepOriginalAudio: boolean }> {
     return ipcRenderer.invoke("sotto:start", sessionID, configuration);
   },
+  // Omit `enabled` to read the current server preference.
+  proofreading(configuration: ClientConfiguration, enabled?: boolean): Promise<boolean> {
+    return ipcRenderer.invoke("sotto:proofreading", configuration, enabled);
+  },
   appendAudio(sessionID: string, chunk: AudioChunk): Promise<void> {
     return ipcRenderer.invoke("sotto:audio", sessionID, chunk);
   },

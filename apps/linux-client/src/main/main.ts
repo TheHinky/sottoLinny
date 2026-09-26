@@ -8,6 +8,7 @@ import {
   session as electronSession,
   type IpcMainInvokeEvent,
 } from "electron";
+import { z } from "zod";
 import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
 import { RecordingSession } from "./recording-session.js";
 import { SottoServerClient } from "./server-client.js";
@@ -83,6 +84,13 @@ ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown)
     await cancelSession(current).catch(console.error);
     throw error;
   }
+});
+ipcMain.handle("sotto:proofreading", async (event, configuration: unknown, enabled: unknown) => {
+  requireSender(event);
+  const client = new SottoServerClient(configurationSchema.parse(configuration));
+  return enabled === undefined
+    ? client.proofreading()
+    : client.setProofreading(z.boolean().parse(enabled));
 });
 ipcMain.handle("sotto:audio", async (event, id: unknown, chunk: unknown) => {
   requireSender(event);
