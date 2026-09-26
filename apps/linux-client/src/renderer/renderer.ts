@@ -215,7 +215,7 @@ async function finish(take: Take) {
     if (!take.cancelled) await cancel(take, message(error));
   }
 }
-startButton.addEventListener("click", async () => {
+async function start() {
   if (active) return;
   const id = crypto.randomUUID();
   const take: Take = {
@@ -235,6 +235,14 @@ startButton.addEventListener("click", async () => {
   } catch (error) {
     if (!take.cancelled) await cancel(take, message(error));
   }
+}
+startButton.addEventListener("click", () => void start());
+// Global shortcut / tray: toggle starts when idle and stops while recording.
+window.sotto.onShortcut((action) => {
+  if (action === "cancel") {
+    if (active) void cancel(active);
+  } else if (!active) void start();
+  else if (active.phase === "recording") void finish(active);
 });
 // Proofreading is a shared server preference: read it from the server rather
 // than storing a local copy, and re-read it whenever the endpoint changes.

@@ -5,6 +5,9 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 ## Implemented
 
 - In-app start, stop, and cancel controls
+- Tray icon (KDE system tray); closing the window hides it, **Quit** is in the tray menu
+- Global shortcuts through the xdg-desktop-portal GlobalShortcuts D-Bus API (not Electron `globalShortcut`, which registers unnamed per-launch entries): `Meta+Alt+Space` toggles recording, `Meta+Alt+Escape` cancels. KDE asks to confirm them on first launch; change them in System Settings → Shortcuts → Sotto Linux
+- Desktop notification with the result when the window is hidden
 - Sandboxed Electron renderer with a CommonJS preload and sender-checked IPC
 - Session-scoped cancellation, including delayed creation and in-flight processing
 - FIR low-pass filtering and mono 16 kHz resampling in an AudioWorklet
@@ -35,6 +38,8 @@ bun install --frozen-lockfile
 bun run dev:linux-client
 ```
 
+The portal identifies the app by `~/.local/share/applications/dev.sotto.Linux.desktop`. `run-dev.sh` installs it; otherwise run `bun run --cwd apps/linux-client install-desktop` once before relying on shortcuts.
+
 The default endpoint is `http://127.0.0.1:8391`. To explicitly request native Wayland:
 
 ```sh
@@ -64,8 +69,8 @@ Cancellation observes a pending create response so it can cancel a late-created 
 - Real-microphone and real clipboard verification on the target KDE desktop
 - Persistent XDG preferences and Secret Service/KWallet credential storage
 - Microphone selector
-- KDE GlobalShortcuts portal experiment, including activation/deactivation behavior
-- Tray/background lifecycle and sleep/lock handling
+- Hold-to-talk (needs the portal's key-release signal, which Electron does not expose)
+- Autostart at login and sleep/lock handling
 - Optional compositor-approved automatic paste
 - Generated shared API types, packaging and client-specific CI
 

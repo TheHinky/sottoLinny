@@ -20,6 +20,8 @@ launch_linux_client() {
     if [[ "$skip_build" != true || ! -f "$client_dir/dist/main/main.js" ]]; then
         bun run build:linux-client > /dev/null
     fi
+    # The Wayland shortcut portal identifies the client by this .desktop entry.
+    bun run --cwd "$client_dir" install-desktop > /dev/null
     if [[ "$server_port" != 8391 ]]; then
         printf 'Set the client endpoint to http://127.0.0.1:%s.\n' "$server_port"
     fi

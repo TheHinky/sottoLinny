@@ -26,6 +26,13 @@ const api = {
   cancel(sessionID: string): Promise<void> {
     return ipcRenderer.invoke("sotto:cancel", sessionID);
   },
+  onShortcut(listener: (action: "toggle" | "cancel") => void) {
+    const handler = (_event: Electron.IpcRendererEvent, action: unknown) => {
+      if (action === "toggle" || action === "cancel") listener(action);
+    };
+    ipcRenderer.on("sotto:shortcut", handler);
+    return () => ipcRenderer.removeListener("sotto:shortcut", handler);
+  },
   onEvent(listener: (sessionID: string, event: ClientEvent) => void) {
     const handler = (_event: Electron.IpcRendererEvent, sessionID: string, value: ClientEvent) =>
       listener(sessionID, value);

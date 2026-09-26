@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "main": "dist/main/main.js",
+  "desktopName": "dev.sotto.Linux.desktop",
   "scripts": {
     "build": "tsc -p tsconfig.json && bun scripts/copy-assets.ts",
     "dev": "bun run build && electron . --ozone-platform-hint=auto",
@@ -11,17 +12,19 @@
     "smoke": "bun run build && bun scripts/smoke.ts",
     "typecheck": "tsc -p tsconfig.check.json",
     "fmt": "prettier --write \"{src,scripts}/**/*.{ts,cts,js}\" package.json \"tsconfig*.json\" README.md",
-    "fmt:check": "prettier --check \"{src,scripts}/**/*.{ts,cts,js}\" package.json \"tsconfig*.json\" README.md"
+    "fmt:check": "prettier --check \"{src,scripts}/**/*.{ts,cts,js}\" package.json \"tsconfig*.json\" README.md",
+    "install-desktop": "bun scripts/install-desktop.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.2",
     "@types/node": "22.20.3",
-    "electron": "39.2.6",
+    "electron": "43.7.5",
     "playwright-core": "1.56.1",
     "prettier": "3.9.6",
     "typescript": "5.9.3"
   },
   "dependencies": {
+    "dbus-next": "0.10.2",
     "zod": "4.3.6"
   }
 }
