@@ -184,12 +184,22 @@ export class SottoServerClient {
     if (this.configuration.token)
       headers.set("Authorization", `Bearer ${this.configuration.token}`);
     const signals = [...(signal ? [signal] : []), ...(timeout ? [AbortSignal.timeout(12000)] : [])];
-    const response = await this.transport(new URL(path, this.endpoint), {
-      ...init,
-      headers,
-      redirect: "error",
-      signal: signals.length ? AbortSignal.any(signals) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await this.transport(new URL(path, this.endpoint), {
+        ...init,
+        headers,
+        redirect: "error",
+        signal: signals.length ? AbortSignal.any(signals) : undefined,
+      });
+    } catch (error) {
+      // fetch rejects with a TypeError when nothing is listening (connection refused).
+      if (error instanceof TypeError)
+        throw new Error(
+          `Sotto server not reachable at ${this.endpoint.origin}. Is it running? (scripts/run-dev.sh start)`,
+        );
+      throw error;
+    }
     if (!response.ok) {
       let message = `The server rejected the request with HTTP ${response.status}.`;
       try {

@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.check.json",
     "fmt": "prettier --write \"{src,scripts}/**/*.{ts,cts,js}\" package.json \"tsconfig*.json\" README.md",
     "fmt:check": "prettier --check \"{src,scripts}/**/*.{ts,cts,js}\" package.json \"tsconfig*.json\" README.md",
-    "install-desktop": "bun scripts/install-desktop.ts"
+    "install-desktop": "bun scripts/install-desktop.ts",
+    "install-autostart": "bun scripts/install-autostart.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.2",

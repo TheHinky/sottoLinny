@@ -28,3 +28,14 @@ test("proofreading toggle preserves other preferences and the revision", async (
     preferences: { language: "de", vocabulary: "x", textCorrectionEnabled: true },
   });
 });
+
+test("connection failures say the server is not reachable", async () => {
+  const client = new SottoServerClient(configuration, (async (
+    _input: URL | RequestInfo,
+  ): Promise<Response> => {
+    throw new TypeError("fetch failed");
+  }) as typeof fetch);
+  await expect(client.health()).rejects.toThrow(
+    "Sotto server not reachable at http://127.0.0.1:8391",
+  );
+});

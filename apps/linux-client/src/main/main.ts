@@ -131,6 +131,8 @@ function createWindow() {
     minWidth: 440,
     minHeight: 560,
     title: "Sotto Linux",
+    // Login autostart starts straight into the tray.
+    show: process.env.SOTTO_START_HIDDEN !== "1",
     icon: join(assets, "icon.png"),
     webPreferences: {
       // Keep capture and timers running while the window is hidden in the tray.

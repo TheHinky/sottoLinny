@@ -40,6 +40,8 @@ bun run dev:linux-client
 
 The portal identifies the app by `~/.local/share/applications/dev.sotto.Linux.desktop`. `run-dev.sh` installs it; otherwise run `bun run --cwd apps/linux-client install-desktop` once before relying on shortcuts.
 
+To start the server and the client (hidden in the tray) at login, run `bun run --cwd apps/linux-client install-autostart` once; `install-autostart --remove` undoes it. It writes `~/.config/autostart/dev.sotto.Linux.desktop`, which runs `scripts/run-dev.sh start --skip-build` in a login shell, so rebuild after pulling changes. The repo needs Bun 1.4.2 on the login `PATH`.
+
 The default endpoint is `http://127.0.0.1:8391`. To explicitly request native Wayland:
 
 ```sh
@@ -69,8 +71,8 @@ Cancellation observes a pending create response so it can cancel a late-created 
 - Real-microphone and real clipboard verification on the target KDE desktop
 - Persistent XDG preferences and Secret Service/KWallet credential storage
 - Microphone selector
-- Hold-to-talk (needs the portal's key-release signal, which Electron does not expose)
-- Autostart at login and sleep/lock handling
+- Hold-to-talk (the portal client already receives key-release `Deactivated` signals)
+- Sleep/lock handling
 - Optional compositor-approved automatic paste
 - Generated shared API types, packaging and client-specific CI
 
