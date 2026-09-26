@@ -5,7 +5,7 @@ The server is an independent TypeScript/Fastify HTTP process that owns models, s
 | Server | Speech | Proofreading |
 | --- | --- | --- |
 | Apple Silicon macOS | Whisper large-v3-turbo / whisper.cpp / Metal | Qwen3-4B-Instruct-2507 / Swift MLX / 4-bit |
-| Linux x86_64 or ARM64 | Whisper large-v3-turbo / whisper.cpp / CPU or CUDA | Qwen3-4B-Instruct-2507 / llama.cpp / Q4_K_M |
+| Linux x86_64 or ARM64 | Whisper large-v3-turbo / whisper.cpp / CPU, Vulkan, or CUDA | Qwen3-4B-Instruct-2507 / llama.cpp / Q4_K_M |
 
 ## Models
 
@@ -52,7 +52,7 @@ Expected size: 2,497,281,120 bytes. SHA-256: `3605803b982cb64aead44f6c1b2ae36e3a
 
 Install Bun 1.4.2 and initialize submodules with `git submodule update --init --recursive`. macOS requires Apple Silicon and full Xcode with its Metal compiler for the MLX helper; the complete client/helper build uses Xcode 26+ and Swift 6.2+. If Metal is missing, run `xcodebuild -downloadComponent MetalToolchain`.
 
-Linux requires Bun, a C/C++ toolchain, CMake, Git, curl, pkg-config, and libcurl development headers. Swift is not required. CUDA builds also need a compatible NVIDIA driver and CUDA toolkit. The [Dockerfile](Dockerfile) provides a pinned Ubuntu 24.04 build environment.
+Linux requires Bun, a C/C++ toolchain, CMake, Git, curl, pkg-config, and libcurl development headers. Swift is not required. CUDA builds also need a compatible NVIDIA driver and CUDA toolkit. When `glslc` is installed, Linux builds Whisper with Vulkan by default; this also needs the Vulkan loader headers and SPIR-V headers (Fedora: `vulkan-headers vulkan-loader-devel spirv-headers-devel glslc`). Set `SOTTO_VULKAN=OFF` for a CPU build. `SOTTO_TEXT_VULKAN=ON` also moves Qwen to the GPU. The [Dockerfile](Dockerfile) provides a pinned Ubuntu 24.04 build environment.
 
 ```sh
 ./scripts/build-server.sh                  # macOS Metal/MLX; Linux CPU

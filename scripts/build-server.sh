@@ -33,7 +33,10 @@ fi
 
 native_flags=(-DCMAKE_BUILD_TYPE=Release "-DSOTTO_CUDA=${SOTTO_CUDA:-OFF}")
 # Vulkan is per helper so speech can use the GPU while proofreading stays on CPU.
-speech_flags=("-DSOTTO_VULKAN=${SOTTO_VULKAN:-OFF}")
+# Speech defaults to Vulkan on Linux when the shader compiler is installed.
+default_vulkan=OFF
+if [[ "$server_platform" == Linux ]] && command -v glslc > /dev/null; then default_vulkan=ON; fi
+speech_flags=("-DSOTTO_VULKAN=${SOTTO_VULKAN:-$default_vulkan}")
 text_flags=("-DSOTTO_TEXT_VULKAN=${SOTTO_TEXT_VULKAN:-OFF}")
 if [[ "$server_platform" == Darwin ]]; then
     if [[ "$server_architecture" != arm64 ]]; then
