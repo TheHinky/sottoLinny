@@ -1,4 +1,5 @@
 import type { AudioChunk, ClientConfiguration } from "../shared/types.js";
+import { playCue } from "./cues.js";
 import { UploadQueue } from "./upload-queue.js";
 
 function input(id: string) {
@@ -94,6 +95,8 @@ function cancel(take: Take, reason = "Cancelled") {
       if (active === take) {
         active = undefined;
         status.textContent = reason;
+        // A user cancel keeps the default reason; anything else is a failure.
+        playCue(reason === "Cancelled" ? "cancel" : "error");
         controls();
       }
     }
@@ -168,6 +171,7 @@ async function openMicrophone(take: Take, keepOriginalAudio: boolean) {
     void finish(take);
   }, 179000);
   status.textContent = "Listening";
+  playCue("start");
   controls();
 }
 async function flush(take: Take) {
@@ -195,6 +199,7 @@ async function flush(take: Take) {
 async function finish(take: Take) {
   if (active !== take || take.cancelled || take.phase !== "recording") return;
   take.phase = "finishing";
+  playCue("stop");
   controls();
   status.textContent = "Finishing upload";
   try {
@@ -209,6 +214,7 @@ async function finish(take: Take) {
       result.delivery === "copied"
         ? "Copied to clipboard"
         : "No speech detected. Clipboard unchanged.";
+    playCue(result.delivery === "copied" ? "done" : "error");
     active = undefined;
     controls();
   } catch (error) {
