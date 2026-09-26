@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sotto Linux</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">KDE Wayland proof of concept</p>
+        <h1>Sotto Linux</h1>
+        <p class="intro">
+          Connect to an existing Sotto server, record from your microphone, and copy the finished
+          transcript.
+        </p>
+      </header>
+
+      <section class="card configuration">
+        <label>
+          Server URL
+          <input id="endpoint" type="url" value="http://127.0.0.1:8391" spellcheck="false" />
+        </label>
+        <label>
+          Access token
+          <input id="token" type="password" autocomplete="off" />
+        </label>
+        <label>
+          Device name
+          <input id="device-name" value="KDE desktop" maxlength="128" />
+        </label>
+      </section>
+
+      <section class="card recording">
+        <div id="status" class="status" aria-live="polite">Ready</div>
+        <div class="actions">
+          <button id="start" class="primary">Start recording</button>
+          <button id="stop">Stop and transcribe</button>
+          <button id="cancel" class="quiet">Cancel</button>
+        </div>
+      </section>
+
+      <section class="card result">
+        <h2>Latest transcript</h2>
+        <p id="transcript" class="transcript">Your transcript will appear here.</p>
+      </section>
+    </main>
+    <script type="module" src="./renderer.js"></script>
+  </body>
+</html>

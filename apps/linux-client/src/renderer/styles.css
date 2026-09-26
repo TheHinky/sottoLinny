@@ -1,0 +1,150 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #111318;
+  color: #f2f4f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 420px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgb(87 110 255 / 18%), transparent 36%),
+    #111318;
+}
+
+main {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  padding: 34px;
+}
+
+header {
+  margin-bottom: 24px;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 34px;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: #99a8ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intro {
+  max-width: 48ch;
+  color: #aeb5c2;
+  line-height: 1.5;
+}
+
+.card {
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid #2a2e38;
+  border-radius: 14px;
+  background: rgb(27 30 37 / 92%);
+  box-shadow: 0 14px 38px rgb(0 0 0 / 20%);
+}
+
+.configuration {
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: #cbd0da;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #3a3f4c;
+  border-radius: 9px;
+  outline: none;
+  background: #14171c;
+  color: #f5f6f8;
+  font: inherit;
+}
+
+input:focus {
+  border-color: #8797ff;
+  box-shadow: 0 0 0 3px rgb(98 119 255 / 18%);
+}
+
+input:disabled {
+  opacity: 0.6;
+}
+
+.status {
+  min-height: 24px;
+  margin-bottom: 16px;
+  color: #d8dcff;
+  font-weight: 650;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 14px;
+  border: 1px solid #404654;
+  border-radius: 9px;
+  background: #292e38;
+  color: #f4f5f8;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: #7083ff;
+  background: #6376ed;
+}
+
+button.quiet {
+  background: transparent;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.transcript {
+  min-height: 72px;
+  margin-bottom: 0;
+  color: #c9ced8;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
