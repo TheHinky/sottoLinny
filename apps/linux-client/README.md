@@ -18,7 +18,7 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 - Explicit final-audio acknowledgement before finishing uploads
 - Runtime request/response validation and bounded HTTP/NDJSON reads
 - Clipboard delivery from the main process via `wl-copy` (Wayland only lets focused windows set the clipboard, so Electron alone fails while dictating into another app; falls back to Electron without `wl-clipboard`); silence leaves the clipboard unchanged
-- HTTP restricted to loopback and literal Tailscale addresses; HTTPS elsewhere
+- HTTP restricted to loopback, literal Tailscale, and private LAN addresses; HTTPS elsewhere
 
 “Original” here means Chromium/Web Audio float32 PCM at the AudioContext rate. It is **not guaranteed untouched hardware audio**. Browser processing/resampling and device selection need real-microphone testing.
 
@@ -50,7 +50,7 @@ cd apps/linux-client
 bun run start -- --ozone-platform=wayland
 ```
 
-Only the device ID is persisted in this prototype. The access token is not saved and is cleared from the input when starting a take. Persistent credentials and non-secret XDG settings are still pending. An already connected Tailscale route is an operator responsibility; IP syntax does not prove encrypted routing.
+The endpoint and device ID persist in the app profile. The access token is encrypted with the OS keystore (KWallet/libsecret via Electron `safeStorage`) and saved to `token.bin` in the app data directory; the window never reads it back. Without a keystore the token is refused rather than stored in plain text. HTTP is also accepted for private LAN IPs, unencrypted, for trusted home networks. An already connected Tailscale route is an operator responsibility; IP syntax does not prove encrypted routing.
 
 ## Verify
 
@@ -69,7 +69,7 @@ Cancellation observes a pending create response so it can cancel a late-created 
 ## Still to do
 
 - Real-microphone and real clipboard verification on the target KDE desktop
-- Persistent XDG preferences and Secret Service/KWallet credential storage
+- Persistent XDG preferences
 - Microphone selector
 - Hold-to-talk (the portal client already receives key-release `Deactivated` signals)
 - Sleep/lock handling

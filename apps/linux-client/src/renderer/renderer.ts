@@ -26,7 +26,8 @@ const startButton = button("start"),
   cancelButton = button("cancel");
 const status = element("status"),
   transcript = element("transcript"),
-  proofreadingNote = element("proofreading-note");
+  proofreadingNote = element("proofreading-note"),
+  tokenNote = element("token-note");
 let proofreadingBusy = false,
   proofreadingKnown = false;
 interface Take {
@@ -50,6 +51,15 @@ function controls() {
   endpoint.disabled = token.disabled = deviceName.disabled = !!active;
   proofreading.disabled = !!active || proofreadingBusy || !proofreadingKnown;
 }
+// ---- Saved settings ----
+// The endpoint is not secret, so it lives in localStorage. The token is saved
+// by the main process (OS keystore); an empty field sends the saved token.
+endpoint.value = localStorage.getItem("sotto.endpoint") || endpoint.value;
+async function showTokenState() {
+  const saved = await window.sotto.tokenSaved().catch(() => false);
+  token.placeholder = saved ? "Saved (type to replace)" : "";
+  tokenNote.textContent = saved ? "" : "Not saved. Required for non-localhost servers.";
+}
 function configuration(clearToken = true): ClientConfiguration {
   const deviceID = localStorage.getItem("sotto.device-id") || `linux-${crypto.randomUUID()}`;
   localStorage.setItem("sotto.device-id", deviceID);
@@ -59,7 +69,7 @@ function configuration(clearToken = true): ClientConfiguration {
     deviceID,
     deviceName: deviceName.value.trim() || "KDE desktop",
   };
-  if (clearToken) token.value = ""; // This prototype does not persist credentials.
+  if (clearToken) token.value = ""; // The saved copy is used from here on.
   return configuration;
 }
 function message(error: unknown) {
@@ -269,8 +279,22 @@ async function syncProofreading(enabled?: boolean) {
   }
 }
 proofreading.addEventListener("change", () => void syncProofreading(proofreading.checked));
-endpoint.addEventListener("change", () => void syncProofreading());
-token.addEventListener("change", () => void syncProofreading());
+endpoint.addEventListener("change", () => {
+  localStorage.setItem("sotto.endpoint", endpoint.value.trim());
+  void syncProofreading();
+});
+token.addEventListener("change", async () => {
+  // Typing a value saves it to the OS keystore and clears the field.
+  try {
+    await window.sotto.saveToken(token.value.trim());
+    token.value = "";
+  } catch (error) {
+    tokenNote.textContent = message(error);
+    return;
+  }
+  await showTokenState();
+  void syncProofreading();
+});
 // Retry after the server comes up (e.g. the client was launched first).
 window.addEventListener("focus", () => {
   if (!proofreadingKnown && !proofreadingBusy && !active) void syncProofreading();
@@ -289,4 +313,5 @@ window.sotto.onEvent((id, event) => {
   if (event.type === "failed") status.textContent = event.message;
 });
 controls();
+void showTokenState();
 void syncProofreading();

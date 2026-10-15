@@ -12,6 +12,7 @@ import {
 } from "electron";
 import { z } from "zod";
 import { copyText } from "./clipboard.js";
+import { loadToken, saveToken } from "./credentials.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
 import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
 import { RecordingSession } from "./recording-session.js";
@@ -101,6 +102,14 @@ async function registerShortcuts() {
   }
 }
 
+// ---- Credentials ----
+// The renderer can set or clear the saved token but never reads it back; an
+// empty token field in a request means "use the saved token".
+function withSavedToken(configuration: unknown) {
+  const parsed = configurationSchema.parse(configuration);
+  return parsed.token ? parsed : { ...parsed, token: loadToken() };
+}
+
 function requireSender(event: IpcMainInvokeEvent) {
   if (
     !window ||
@@ -164,7 +173,7 @@ ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown)
   const sessionID = sessionIDSchema.parse(id);
   const current = new RecordingSession(
     sessionID,
-    new SottoServerClient(configurationSchema.parse(configuration)),
+    new SottoServerClient(withSavedToken(configuration)),
     (value) => {
       if (session === current && !window?.isDestroyed())
         window?.webContents.send("sotto:event", sessionID, value);
@@ -183,10 +192,18 @@ ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown)
 });
 ipcMain.handle("sotto:proofreading", async (event, configuration: unknown, enabled: unknown) => {
   requireSender(event);
-  const client = new SottoServerClient(configurationSchema.parse(configuration));
+  const client = new SottoServerClient(withSavedToken(configuration));
   return enabled === undefined
     ? client.proofreading()
     : client.setProofreading(z.boolean().parse(enabled));
+});
+ipcMain.handle("sotto:token-saved", (event) => {
+  requireSender(event);
+  return loadToken() !== "";
+});
+ipcMain.handle("sotto:save-token", (event, token: unknown) => {
+  requireSender(event);
+  saveToken(configurationSchema.shape.token.parse(token));
 });
 ipcMain.handle("sotto:audio", async (event, id: unknown, chunk: unknown) => {
   requireSender(event);

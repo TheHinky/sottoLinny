@@ -17,6 +17,13 @@ const api = {
   proofreading(configuration: ClientConfiguration, enabled?: boolean): Promise<boolean> {
     return ipcRenderer.invoke("sotto:proofreading", configuration, enabled);
   },
+  tokenSaved(): Promise<boolean> {
+    return ipcRenderer.invoke("sotto:token-saved");
+  },
+  // An empty string clears the saved token.
+  saveToken(token: string): Promise<void> {
+    return ipcRenderer.invoke("sotto:save-token", token);
+  },
   appendAudio(sessionID: string, chunk: AudioChunk): Promise<void> {
     return ipcRenderer.invoke("sotto:audio", sessionID, chunk);
   },
