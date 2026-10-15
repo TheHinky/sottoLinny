@@ -11,6 +11,11 @@ state_dir="$project_dir/.local"
 pid_file="$state_dir/server.pid"
 log_file="$state_dir/server.log"
 server_port="${SOTTO_SERVER_PORT:-8391}"
+# Nonloopback hosts (e.g. a LAN IP for the Windows client) also need SOTTO_SERVER_TOKEN_FILE.
+# status/stop/start must use the same SOTTO_SERVER_HOST as the running server.
+server_host="${SOTTO_SERVER_HOST:-127.0.0.1}"
+health_host="$server_host"
+[[ "$health_host" == 0.0.0.0 ]] && health_host=127.0.0.1
 client_dir="$state_dir/client"
 mkdir -p "$state_dir"
 chmod 700 "$state_dir"
@@ -73,7 +78,7 @@ use_running_port() {
     # Check it against the record so stale or damaged state cannot select a
     # different server for a health check or client launch.
     local arguments="${server_command#"$server_binary "}"
-    local port_pattern='^--host 127\.0\.0\.1 --port ([0-9]{1,5})( |$)'
+    local port_pattern='^--host [0-9a-fA-F.:]+ --port ([0-9]{1,5})( |$)'
     if [[ "$arguments" =~ $port_pattern ]]; then
         local running_port="${BASH_REMATCH[1]}"
         if valid_port "$running_port" && [[ -z "$recorded_extra" ]] && \
@@ -111,8 +116,8 @@ case "$action" in
     status)
         if is_running; then
             use_running_port
-            printf 'Dev server PID %s: http://localhost:%s\n' "$server_pid" "$server_port"
-            curl --fail --silent --show-error --max-time 3 "http://127.0.0.1:$server_port/v1/health"
+            printf 'Dev server PID %s: http://%s:%s\n' "$server_pid" "$health_host" "$server_port"
+            curl --fail --silent --show-error --max-time 3 "http://$health_host:$server_port/v1/health"
             printf '\n'
         else
             printf 'The dev server is stopped.\n'
@@ -125,7 +130,7 @@ esac
 
 if is_running; then
     use_running_port
-    printf 'Dev server already running: http://localhost:%s (PID %s).\n' "$server_port" "$server_pid"
+    printf 'Dev server already running: http://%s:%s (PID %s).\n' "$health_host" "$server_port" "$server_pid"
     launch_client
     exit 0
 fi
@@ -165,7 +170,7 @@ if [[ ! -f "$speech_model" || ! -e "$proof_model" ]]; then
     if [[ "$(uname -s)" == Linux ]]; then printf 'On Linux, run scripts/setup-linux-server.sh first.\n' >&2; fi
     exit 1
 fi
-server_args=(--host 127.0.0.1 --port "$server_port" --dev
+server_args=(--host "$server_host" --port "$server_port" --dev
     --data-dir "${SOTTO_SERVER_DATA_DIR:-$state_dir/server}"
     --speech-helper "${SOTTO_ENGINE_PATH:-$project_dir/build/server/helpers/sotto-engine}"
     --speech-model "$speech_model"
@@ -183,8 +188,8 @@ for ((attempt = 0; attempt < 100; attempt++)); do
         printf 'The dev server exited during startup. See %s.\n' "$log_file" >&2
         exit 1
     fi
-    if curl --fail --silent --max-time 1 "http://127.0.0.1:$server_port/v1/health" > /dev/null; then
-        printf 'Dev server: http://localhost:%s (PID %s)\nLog: %s\n' "$server_port" "$server_pid" "$log_file"
+    if curl --fail --silent --max-time 1 "http://$health_host:$server_port/v1/health" > /dev/null; then
+        printf 'Dev server: http://%s:%s (PID %s)\nLog: %s\n' "$health_host" "$server_port" "$server_pid" "$log_file"
         launch_client
         exit 0
     fi

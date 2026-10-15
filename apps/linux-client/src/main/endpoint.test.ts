@@ -13,12 +13,15 @@ describe("server endpoint", () => {
     expect(new URL("v1/health", endpoint).href).toBe("https://dictation.example/sotto/v1/health");
   });
 
-  test("allows HTTP only for loopback and literal Tailscale addresses", () => {
+  test("allows HTTP only for loopback, Tailscale, and private LAN literals", () => {
+    for (const host of ["192.168.10.45", "10.0.0.2", "172.16.0.1", "172.31.255.1"])
+      expect(normalizeServerEndpoint(`http://${host}:8391`).hostname).toBe(host);
+    expect(() => normalizeServerEndpoint("http://172.32.0.1:8391")).toThrow();
+    expect(() => normalizeServerEndpoint("http://8.8.8.8:8391")).toThrow();
     expect(normalizeServerEndpoint("http://100.64.1.2:8391").hostname).toBe("100.64.1.2");
     expect(normalizeServerEndpoint("http://[fd7a:115c:a1e0::1]:8391").hostname).toBe(
       "[fd7a:115c:a1e0::1]",
     );
-    expect(() => normalizeServerEndpoint("http://192.168.1.2:8391")).toThrow();
     expect(() => normalizeServerEndpoint("http://sotto.example:8391")).toThrow();
   });
 
