@@ -17,6 +17,9 @@ const api = {
   proofreading(configuration: ClientConfiguration, enabled?: boolean): Promise<boolean> {
     return ipcRenderer.invoke("sotto:proofreading", configuration, enabled);
   },
+  setNotifications(enabled: boolean): Promise<void> {
+    return ipcRenderer.invoke("sotto:notifications", enabled);
+  },
   tokenSaved(): Promise<boolean> {
     return ipcRenderer.invoke("sotto:token-saved");
   },

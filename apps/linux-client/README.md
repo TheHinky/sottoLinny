@@ -7,7 +7,7 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 - In-app start, stop, and cancel controls
 - Tray icon (KDE system tray); closing the window hides it, **Quit** is in the tray menu
 - Global shortcuts through the xdg-desktop-portal GlobalShortcuts D-Bus API (not Electron `globalShortcut`, which registers unnamed per-launch entries): `Meta+Alt+Space` toggles recording, `Meta+Alt+Escape` cancels. KDE asks to confirm them on first launch; change them in System Settings → Shortcuts → Sotto Linux
-- Desktop notification with the result when the window is hidden
+- Desktop notification with the result when the window is hidden; a **Desktop notifications** checkbox turns them off for this device
 - Sandboxed Electron renderer with a CommonJS preload and sender-checked IPC
 - Session-scoped cancellation, including delayed creation and in-flight processing
 - FIR low-pass filtering and mono 16 kHz resampling in an AudioWorklet

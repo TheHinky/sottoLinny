@@ -20,7 +20,8 @@ function element(id: string) {
 const endpoint = input("endpoint"),
   token = input("token"),
   deviceName = input("device-name"),
-  proofreading = input("proofreading");
+  proofreading = input("proofreading"),
+  notifications = input("notifications");
 const startButton = button("start"),
   stopButton = button("stop"),
   cancelButton = button("cancel");
@@ -65,6 +66,12 @@ async function showTokenState() {
   token.placeholder = saved ? "Saved (type to replace)" : "";
   tokenNote.textContent = saved ? "" : "Not saved. Required for non-localhost servers.";
 }
+notifications.checked = localStorage.getItem("sotto.notifications") !== "off";
+void window.sotto.setNotifications(notifications.checked);
+notifications.addEventListener("change", () => {
+  localStorage.setItem("sotto.notifications", notifications.checked ? "on" : "off");
+  void window.sotto.setNotifications(notifications.checked);
+});
 function configuration(clearToken = true): ClientConfiguration {
   const prefix = navigator.userAgent.includes("Windows") ? "windows" : "linux";
   const deviceID = localStorage.getItem("sotto.device-id") || `${prefix}-${crypto.randomUUID()}`;

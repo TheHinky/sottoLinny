@@ -79,7 +79,10 @@ function showWindow() {
   window.show();
   window.focus();
 }
+// Device preference, persisted by the renderer and pushed here on load/change.
+let notificationsEnabled = true;
 function notify(body: string) {
+  if (!notificationsEnabled) return;
   // The window already shows the result; only notify when working from the tray.
   if (window?.isVisible() && window.isFocused()) return;
   if (Notification.isSupported()) new Notification({ title: "Sotto", body, silent: true }).show();
@@ -218,6 +221,10 @@ ipcMain.handle("sotto:proofreading", async (event, configuration: unknown, enabl
   return enabled === undefined
     ? client.proofreading()
     : client.setProofreading(z.boolean().parse(enabled));
+});
+ipcMain.handle("sotto:notifications", (event, enabled: unknown) => {
+  requireSender(event);
+  notificationsEnabled = z.boolean().parse(enabled);
 });
 ipcMain.handle("sotto:token-saved", (event) => {
   requireSender(event);
