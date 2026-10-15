@@ -42,6 +42,15 @@ The portal identifies the app by `~/.local/share/applications/dev.sotto.Linux.de
 
 To start the server and the client (hidden in the tray) at login, run `bun run --cwd apps/linux-client install-autostart` once; `install-autostart --remove` undoes it. It writes `~/.config/autostart/dev.sotto.Linux.desktop`, which runs `scripts/run-dev.sh start --skip-build` in a login shell, so rebuild after pulling changes. The repo needs Bun 1.4.2 on the login `PATH`.
 
+To serve other machines on the LAN (for example the Windows gaming PC), create `.local/server.env` (git-ignored, `chmod 600`). `run-dev.sh` reads it for `start`, `status` and `stop`, including at login:
+
+```sh
+SOTTO_SERVER_HOST=192.168.10.45
+SOTTO_SERVER_TOKEN_FILE=/absolute/path/to/.local/server-token
+```
+
+Generate the token once with `umask 077; openssl rand -hex 32 > .local/server-token`. Clients then use `http://192.168.10.45:8391` and that token.
+
 The default endpoint is `http://127.0.0.1:8391`. To explicitly request native Wayland:
 
 ```sh

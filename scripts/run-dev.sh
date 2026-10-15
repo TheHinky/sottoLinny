@@ -10,6 +10,17 @@ server_binary="$project_dir/build/server/sotto-server"
 state_dir="$project_dir/.local"
 pid_file="$state_dir/server.pid"
 log_file="$state_dir/server.log"
+# Optional per-machine settings in .local/server.env (git-ignored), e.g. for a
+# LAN listener that survives login autostart. Plain KEY=value lines; only the
+# keys below are read, and variables already set in the environment win.
+if [[ -f "$state_dir/server.env" ]]; then
+    while IFS='=' read -r key value; do
+        case "$key" in
+            SOTTO_SERVER_HOST | SOTTO_SERVER_PORT | SOTTO_SERVER_TOKEN_FILE)
+                [[ -n "${!key:-}" ]] || export "$key=$value" ;;
+        esac
+    done < "$state_dir/server.env"
+fi
 server_port="${SOTTO_SERVER_PORT:-8391}"
 # Nonloopback hosts (e.g. a LAN IP for the Windows client) also need SOTTO_SERVER_TOKEN_FILE.
 # status/stop/start must use the same SOTTO_SERVER_HOST as the running server.
