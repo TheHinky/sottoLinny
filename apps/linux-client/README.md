@@ -83,7 +83,7 @@ The same app runs on Windows for the Le Mans Ultimate dictation workflow; nothin
 - The clipboard uses Electron directly; the token is encrypted with DPAPI.
 - Device IDs start with `windows-` and the default device name is `Windows PC`.
 
-Requires Bun 1.4.2 and a checkout on the Windows PC: `bun install --frozen-lockfile`, then `bun run dev:linux-client`. Set the server URL (for example `http://192.168.10.45:8391`) and token once. Not yet verified on real Windows hardware.
+Requires Bun 1.4.2 and a checkout on the Windows PC: `bun install --frozen-lockfile`, then `bun run dev:linux-client`. Set the server URL (for example `http://192.168.10.45:8391`) and token once. Not yet verified on real Windows hardware. Full setup: [docs/windows-client.md](../../docs/windows-client.md).
 
 ## Still to do
 
