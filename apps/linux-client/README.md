@@ -75,6 +75,16 @@ The smoke test has passed with `--ozone-platform=wayland`. It does not establish
 
 Cancellation observes a pending create response so it can cancel a late-created generation. If that response is lost entirely, its ID is unknown; the server's existing receiving-generation expiry remains the recovery mechanism. Cleanup errors are shown rather than treated as successful cancellation.
 
+## Windows (experimental)
+
+The same app runs on Windows for the Le Mans Ultimate dictation workflow; nothing Windows-specific is required on the server. Differences from KDE:
+
+- Shortcuts use Electron `globalShortcut`: `Ctrl+Alt+F9` toggles recording, `Ctrl+Alt+F10` cancels. Override with `SOTTO_TOGGLE_SHORTCUT` / `SOTTO_CANCEL_SHORTCUT` (Electron accelerator syntax). Registration fails silently in the UI (logged to the console) if another app owns the combination.
+- The clipboard uses Electron directly; the token is encrypted with DPAPI.
+- Device IDs start with `windows-` and the default device name is `Windows PC`.
+
+Requires Bun 1.4.2 and a checkout on the Windows PC: `bun install --frozen-lockfile`, then `bun run dev:linux-client`. Set the server URL (for example `http://192.168.10.45:8391`) and token once. Not yet verified on real Windows hardware.
+
 ## Still to do
 
 - Real-microphone and real clipboard verification on the target KDE desktop

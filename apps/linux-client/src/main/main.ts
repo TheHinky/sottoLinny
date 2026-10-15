@@ -7,6 +7,7 @@ import {
   Menu,
   Notification,
   session as electronSession,
+  globalShortcut,
   Tray,
   type IpcMainInvokeEvent,
 } from "electron";
@@ -23,6 +24,8 @@ import { SottoServerClient } from "./server-client.js";
 // (`desktopName` in package.json, installed by scripts/install-desktop.ts).
 app.setName("Sotto Linux");
 const appId = "dev.sotto.Linux";
+// Windows notifications require an AppUserModelID.
+if (process.platform === "win32") app.setAppUserModelId(appId);
 if (!app.requestSingleInstanceLock()) app.exit(0);
 
 const rendererPath = join(import.meta.dirname, "../renderer/index.html");
@@ -89,7 +92,26 @@ function sendShortcut(action: ShortcutAction) {
   if (!window || window.isDestroyed()) return;
   window.webContents.send("sotto:shortcut", action);
 }
+// Windows has no portal; Electron's globalShortcut (RegisterHotKey) fires on
+// key press, which is all toggle needs. Override with SOTTO_TOGGLE_SHORTCUT /
+// SOTTO_CANCEL_SHORTCUT using Electron accelerator syntax, e.g. "Control+Alt+F9".
+const windowsShortcuts: Record<ShortcutAction, string> = {
+  toggle: process.env.SOTTO_TOGGLE_SHORTCUT || "Control+Alt+F9",
+  cancel: process.env.SOTTO_CANCEL_SHORTCUT || "Control+Alt+F10",
+};
+function registerWindowsShortcuts() {
+  for (const [action, accelerator] of Object.entries(windowsShortcuts) as [
+    ShortcutAction,
+    string,
+  ][]) {
+    // Fails if another app already owns the combination.
+    if (!globalShortcut.register(accelerator, () => sendShortcut(action)))
+      console.warn(`Could not register ${accelerator} for ${action}.`);
+  }
+  unregisterShortcuts = () => globalShortcut.unregisterAll();
+}
 async function registerShortcuts() {
+  if (process.platform === "win32") return registerWindowsShortcuts();
   try {
     unregisterShortcuts = await registerGlobalShortcuts(appId, shortcuts, {
       activated: (id) => {

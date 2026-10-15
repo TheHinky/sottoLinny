@@ -55,19 +55,25 @@ function controls() {
 // The endpoint is not secret, so it lives in localStorage. The token is saved
 // by the main process (OS keystore); an empty field sends the saved token.
 endpoint.value = localStorage.getItem("sotto.endpoint") || endpoint.value;
+const defaultDeviceName = navigator.userAgent.includes("Windows") ? "Windows PC" : "KDE desktop";
+deviceName.value = localStorage.getItem("sotto.device-name") || defaultDeviceName;
+deviceName.addEventListener("change", () =>
+  localStorage.setItem("sotto.device-name", deviceName.value.trim()),
+);
 async function showTokenState() {
   const saved = await window.sotto.tokenSaved().catch(() => false);
   token.placeholder = saved ? "Saved (type to replace)" : "";
   tokenNote.textContent = saved ? "" : "Not saved. Required for non-localhost servers.";
 }
 function configuration(clearToken = true): ClientConfiguration {
-  const deviceID = localStorage.getItem("sotto.device-id") || `linux-${crypto.randomUUID()}`;
+  const prefix = navigator.userAgent.includes("Windows") ? "windows" : "linux";
+  const deviceID = localStorage.getItem("sotto.device-id") || `${prefix}-${crypto.randomUUID()}`;
   localStorage.setItem("sotto.device-id", deviceID);
   const configuration = {
     endpoint: endpoint.value.trim(),
     token: token.value,
     deviceID,
-    deviceName: deviceName.value.trim() || "KDE desktop",
+    deviceName: deviceName.value.trim() || defaultDeviceName,
   };
   if (clearToken) token.value = ""; // The saved copy is used from here on.
   return configuration;
