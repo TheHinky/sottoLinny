@@ -96,3 +96,21 @@ Requires Bun 1.4.2 and a checkout on the Windows PC: `bun install --frozen-lockf
 - Generated shared API types, packaging and client-specific CI
 
 A Rust/PipeWire helper is optional and should only be added for demonstrated Chromium or desktop-integration limitations. Portals can be called over D-Bus from Node.
+
+### Windows LMU paste shortcut (experimental)
+
+`Ctrl+Alt+F11` consumes the latest successfully copied transcript once, only while
+`Le Mans Ultimate.exe` owns the foreground window. Open the chat field yourself
+before pressing it. No Enter/send is emitted. A take expires after two minutes;
+starting another take, cancellation, silence, changed clipboard or any paste
+attempt invalidates the old draft. Failed/uncertain pastes are never retried.
+
+Optional `SOTTO_LMU_CHAT_KEY` (one letter/digit) opens chat before pasting, with a
+300 ms delay. Set it only after verifying the actual game binding and that chat
+is initially closed. Leave it unset for manual chat opening. Override the paste
+hotkey with `SOTTO_PASTE_SHORTCUT`. This helper does not bypass game protection
+or elevation restrictions, and paste support must be verified while parked.
+The UI cannot detect which in-game field has focus. Windows/game focus may
+change between checks; this remains an experimental, user-triggered macro.
+No live LMU chat delivery or real microphone verification has been established
+by the automated checks. No wheel controls have been assigned by this code.

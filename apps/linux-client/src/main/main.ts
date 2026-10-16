@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   app,
+  clipboard,
   BrowserWindow,
   ipcMain,
   Menu,
@@ -12,6 +13,8 @@ import {
   type IpcMainInvokeEvent,
 } from "electron";
 import { z } from "zod";
+import { ChatDraft } from "./chat-draft.js";
+import { pasteIntoLMU } from "./windows-chat.js";
 import { copyText } from "./clipboard.js";
 import { loadToken, saveToken } from "./credentials.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
@@ -44,6 +47,7 @@ let tray: Tray | undefined;
 let quitting = false;
 type Phase = "idle" | "recording" | "processing";
 let phase: Phase = "idle";
+const chatDraft = new ChatDraft();
 
 // ---- Tray ----
 function setPhase(next: Phase) {
@@ -92,6 +96,7 @@ function notify(body: string) {
 // Recording runs in the renderer (it owns the microphone), so shortcuts are
 // forwarded there; the renderer ignores actions that do not fit its state.
 function sendShortcut(action: ShortcutAction) {
+  if (action === "cancel") chatDraft.clear();
   if (!window || window.isDestroyed()) return;
   window.webContents.send("sotto:shortcut", action);
 }
@@ -111,6 +116,19 @@ function registerWindowsShortcuts() {
     if (!globalShortcut.register(accelerator, () => sendShortcut(action)))
       console.warn(`Could not register ${accelerator} for ${action}.`);
   }
+  const pasteShortcut = process.env.SOTTO_PASTE_SHORTCUT || "Control+Alt+F11";
+  if (
+    !globalShortcut.register(pasteShortcut, () => {
+      if (phase !== "idle") return;
+      void chatDraft
+        .paste(() => clipboard.readText(), pasteIntoLMU)
+        .then(() => notify("Transcript pasted. Review and send manually."))
+        .catch((error) => {
+          notify(error instanceof Error ? error.message : "Chat paste failed.");
+        });
+    })
+  )
+    console.warn(`Could not register ${pasteShortcut} for chat paste.`);
   unregisterShortcuts = () => globalShortcut.unregisterAll();
 }
 async function registerShortcuts() {
@@ -151,6 +169,7 @@ function currentSession(id: unknown) {
   return session;
 }
 async function cancelSession(current: RecordingSession) {
+  chatDraft.clear();
   try {
     await current.cancel();
   } finally {
@@ -194,8 +213,10 @@ function createWindow() {
 }
 ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown) => {
   requireSender(event);
-  if (session) throw new Error("A recording is already active or being cancelled.");
+  if (session || chatDraft.isPasting)
+    throw new Error("A recording or chat paste is already active.");
   const sessionID = sessionIDSchema.parse(id);
+  chatDraft.clear();
   const current = new RecordingSession(
     sessionID,
     new SottoServerClient(withSavedToken(configuration)),
@@ -250,6 +271,7 @@ ipcMain.handle("sotto:finish", async (event, id: unknown) => {
   setPhase("processing");
   try {
     const result = await current.finish();
+    if (session === current && result.delivery === "copied") chatDraft.ready(result.transcript);
     notify(result.delivery === "copied" ? "Copied to clipboard" : "No speech detected.");
     return result;
   } catch (error) {
@@ -264,6 +286,7 @@ ipcMain.handle("sotto:finish", async (event, id: unknown) => {
 ipcMain.handle("sotto:cancel", async (event, id: unknown) => {
   requireSender(event);
   const parsed = sessionIDSchema.parse(id);
+  chatDraft.clear();
   if (session?.id === parsed) await cancelSession(session);
 });
 app.whenReady().then(() => {
