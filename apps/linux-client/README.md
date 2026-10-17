@@ -115,3 +115,17 @@ NONE (chat must already be open); it defaults to ENTER. The final Enter still
 sends. `SOTTO_PASTE_SHORTCUT` overrides the shortcut. The helper cannot detect
 which in-game field is focused or confirm server delivery. It does not bypass
 game protection or elevation restrictions.
+
+### LMU typed chat update — 17 October 2026
+
+Clipboard paste was not working in the user's game. Ctrl+Alt+F11 now types printable
+ASCII text using keyboard-layout-aware scan codes (15 ms down, 15 ms gap), retaining
+fresh-draft, clipboard-match, foreground and single-use checks. Chat starts closed.
+Enter opens it; after typing, Enter sends/closes unless SOTTO_LMU_CHAT_NO_SEND=1.
+That test mode leaves the typed message visible for inspection without sending.
+The helper's -ValidateOnly mode plans keys without accessing game focus or sending
+input. Text is limited to 240 printable ASCII characters as a conservative helper
+bound, not a verified LMU chat limit; unsupported or overlong text is rejected
+before chat opens. Physical LMU acceptance and its length limit remain unverified.
+The helper process uses ExecutionPolicy Bypass only for itself; system policy is
+unchanged. Source backups are under .local/chat-type-backup-*.
