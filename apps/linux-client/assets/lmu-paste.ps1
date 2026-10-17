@@ -66,16 +66,10 @@ public static class SottoLMUInput {
         catch { return false; }
     }
     public static void Key(IntPtr target, ushort code, bool up) {
-        if (!IsLMU(target)) throw new Exception("LMU must be the foreground window.");
-        INPUT input = new INPUT(); input.type = 1;
-        input.data.keyboard.vk = code; input.data.keyboard.flags = up ? 2u : 0u;
-        if (SendInput(1, new INPUT[] { input }, Marshal.SizeOf(typeof(INPUT))) != 1)
-            throw new Exception("Windows rejected keyboard input.");
+        Scan(target, code, up);
     }
     public static void Release(ushort code) {
-        INPUT input = new INPUT(); input.type = 1;
-        input.data.keyboard.vk = code; input.data.keyboard.flags = 2;
-        SendInput(1, new INPUT[] { input }, Marshal.SizeOf(typeof(INPUT)));
+        Scan(IntPtr.Zero, code, true);
     }
 }
 '@
