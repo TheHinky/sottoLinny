@@ -129,3 +129,5 @@ bound, not a verified LMU chat limit; unsupported or overlong text is rejected
 before chat opens. Physical LMU acceptance and its length limit remain unverified.
 The helper process uses ExecutionPolicy Bypass only for itself; system policy is
 unchanged. Source backups are under .local/chat-type-backup-*.
+
+User confirmed that scan-code Enter opens chat and the transcript is typed in LMU. Full send mode is now enabled locally (SOTTO_LMU_CHAT_NO_SEND=0): the final Enter sends/closes. Start with chat closed; record a fresh phrase after client restart. Final in-game send/close still requires confirmation.
