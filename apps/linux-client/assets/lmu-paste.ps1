@@ -1,4 +1,4 @@
-param([string]$ChatKey = 'NONE')
+param([string]$ChatKey = 'ENTER')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -TypeDefinition @'
@@ -43,7 +43,7 @@ public static class SottoLMUInput {
 '@
 
 # Read expected text privately from stdin; never read arbitrary clipboard text
-# into chat, and never press Enter. The caller expires and consumes each draft.
+# into chat. The caller expires and consumes each draft. Chat must start closed.
 [Console]::InputEncoding = [Text.Encoding]::UTF8
 $expected = [Console]::In.ReadToEnd()
 $target = [SottoLMUInput]::GetForegroundWindow()
@@ -51,7 +51,7 @@ if (-not [SottoLMUInput]::IsLMU($target)) { throw 'LMU must be the foreground wi
 if ([string]::IsNullOrWhiteSpace($expected) -or [Windows.Forms.Clipboard]::GetText() -cne $expected) {
     throw 'Clipboard changed; paste cancelled.'
 }
-if ($ChatKey -ne 'NONE' -and $ChatKey -notmatch '^[A-Za-z0-9]$') { throw 'Invalid chat key.' }
+if ($ChatKey -ne 'NONE' -and $ChatKey -notmatch '^(ENTER|[A-Za-z0-9])$') { throw 'Invalid chat key.' }
 # Wait for the trigger chord to be released; never release user-held controls.
 $deadline = [DateTime]::UtcNow.AddSeconds(2)
 do {
@@ -63,8 +63,8 @@ do {
 } while ($held -and [DateTime]::UtcNow -lt $deadline)
 if ($held) { throw 'Release the shortcut keys before pasting.' }
 if ($ChatKey -ne 'NONE') {
-    $code = [ushort][char]$ChatKey.ToUpperInvariant()
-    try { [SottoLMUInput]::Key($target, $code, $false) }
+    $code = if ($ChatKey -eq 'ENTER') { [ushort]13 } else { [ushort][char]$ChatKey.ToUpperInvariant() }
+    try { [SottoLMUInput]::Key($target, $code, $false); Start-Sleep -Milliseconds 30 }
     finally { [SottoLMUInput]::Release($code) }
     Start-Sleep -Milliseconds 300
 }
@@ -75,4 +75,14 @@ try {
 } finally {
     [SottoLMUInput]::Release(86)
     [SottoLMUInput]::Release(17)
+}
+
+# Enter sends and closes LMU chat. Never issue a second close/toggle key.
+Start-Sleep -Milliseconds 200
+if ([Windows.Forms.Clipboard]::GetText() -cne $expected) { throw 'Clipboard changed; send cancelled.' }
+try {
+    [SottoLMUInput]::Key($target, 13, $false)
+    Start-Sleep -Milliseconds 30
+} finally {
+    [SottoLMUInput]::Release(13)
 }

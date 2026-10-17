@@ -122,7 +122,7 @@ function registerWindowsShortcuts() {
       if (phase !== "idle") return;
       void chatDraft
         .paste(() => clipboard.readText(), pasteIntoLMU)
-        .then(() => notify("Transcript pasted. Review and send manually."))
+        .then(() => notify("Chat send sequence completed."))
         .catch((error) => {
           notify(error instanceof Error ? error.message : "Chat paste failed.");
         });

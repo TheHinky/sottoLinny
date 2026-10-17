@@ -97,20 +97,21 @@ Requires Bun 1.4.2 and a checkout on the Windows PC: `bun install --frozen-lockf
 
 A Rust/PipeWire helper is optional and should only be added for demonstrated Chromium or desktop-integration limitations. Portals can be called over D-Bus from Node.
 
-### Windows LMU paste shortcut (experimental)
+### Windows LMU chat-send shortcut (experimental)
 
-`Ctrl+Alt+F11` consumes the latest successfully copied transcript once, only while
-`Le Mans Ultimate.exe` owns the foreground window. Open the chat field yourself
-before pressing it. No Enter/send is emitted. A take expires after two minutes;
-starting another take, cancellation, silence, changed clipboard or any paste
-attempt invalidates the old draft. Failed/uncertain pastes are never retried.
+`Ctrl+Alt+F11` (the wheel's existing Paste button) consumes the latest successfully
+copied transcript once. With LMU in the foreground and chat initially closed, it
+presses Enter, waits 300 ms, pastes, waits 200 ms, then presses Enter to send and
+close chat. Do not pre-open chat. Enter's open/send/close behaviour was confirmed
+by the user; the full macro still needs a parked in-game test.
 
-Optional `SOTTO_LMU_CHAT_KEY` (one letter/digit) opens chat before pasting, with a
-300 ms delay. Set it only after verifying the actual game binding and that chat
-is initially closed. Leave it unset for manual chat opening. Override the paste
-hotkey with `SOTTO_PASTE_SHORTCUT`. This helper does not bypass game protection
-or elevation restrictions, and paste support must be verified while parked.
-The UI cannot detect which in-game field has focus. Windows/game focus may
-change between checks; this remains an experimental, user-triggered macro.
-No live LMU chat delivery or real microphone verification has been established
-by the automated checks. No wheel controls have been assigned by this code.
+A take expires after two minutes; starting another take, cancellation, silence,
+changed clipboard or any delivery attempt invalidates the old draft. Failed or
+uncertain sends are never retried. No extra Escape/close key is emitted because
+Enter already closes the field. Foreground LMU is checked before each key press.
+
+`SOTTO_LMU_CHAT_KEY` can override the opening key with ENTER, a letter/digit, or
+NONE (chat must already be open); it defaults to ENTER. The final Enter still
+sends. `SOTTO_PASTE_SHORTCUT` overrides the shortcut. The helper cannot detect
+which in-game field is focused or confirm server delivery. It does not bypass
+game protection or elevation restrictions.

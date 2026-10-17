@@ -2,11 +2,13 @@ import { spawn } from "node:child_process";
 import { join } from "node:path";
 
 // Separate helper keeps Win32 input out of the sandboxed renderer. No shell
-// interpolation, transcript arguments, auto-send, focus switching or server changes.
+// interpolation, transcript arguments, focus switching or server changes.
 export function pasteIntoLMU(text: string): Promise<void> {
-  const chatKey = process.env.SOTTO_LMU_CHAT_KEY || "";
-  if (chatKey && !/^[A-Z0-9]$/i.test(chatKey))
-    return Promise.reject(new Error("SOTTO_LMU_CHAT_KEY must be one letter or digit."));
+  const chatKey = process.env.SOTTO_LMU_CHAT_KEY || "ENTER";
+  if (!/^(ENTER|NONE|[A-Z0-9])$/i.test(chatKey))
+    return Promise.reject(
+      new Error("SOTTO_LMU_CHAT_KEY must be ENTER, NONE, or one letter/digit."),
+    );
   return new Promise((resolve, reject) => {
     const child = spawn(
       "powershell.exe",
@@ -18,7 +20,7 @@ export function pasteIntoLMU(text: string): Promise<void> {
         "-File",
         join(import.meta.dirname, "../../assets/lmu-paste.ps1"),
         "-ChatKey",
-        chatKey || "NONE",
+        chatKey.toUpperCase(),
       ],
       { windowsHide: true, stdio: ["pipe", "ignore", "pipe"] },
     );
