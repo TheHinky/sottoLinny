@@ -104,7 +104,7 @@ do {
 } while ($held -and [DateTime]::UtcNow -lt $deadline)
 if ($held) { throw 'Release the shortcut keys before pasting.' }
 if ($ChatKey -ne 'NONE') {
-    $code = if ($ChatKey -eq 'ENTER') { [ushort]13 } else { [ushort][char]$ChatKey.ToUpperInvariant() }
+    $code = if ($ChatKey -eq 'ENTER') { [UInt16]13 } else { [UInt16][char]$ChatKey.ToUpperInvariant() }
     try { [SottoLMUInput]::Key($target, $code, $false); Start-Sleep -Milliseconds 30 }
     finally { [SottoLMUInput]::Release($code) }
     Start-Sleep -Milliseconds 300

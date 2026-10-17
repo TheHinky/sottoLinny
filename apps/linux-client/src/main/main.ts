@@ -52,6 +52,7 @@ const chatDraft = new ChatDraft();
 // ---- Tray ----
 function setPhase(next: Phase) {
   phase = next;
+  console.log(new Date().toISOString(), "[chat] phase", next);
   tray?.setImage(join(assets, next === "idle" ? "tray-idle.png" : "tray-recording.png"));
   tray?.setToolTip(
     next === "idle" ? "Sotto" : next === "recording" ? "Sotto: recording" : "Sotto: processing",
@@ -119,11 +120,28 @@ function registerWindowsShortcuts() {
   const pasteShortcut = process.env.SOTTO_PASTE_SHORTCUT || "Control+Alt+F11";
   if (
     !globalShortcut.register(pasteShortcut, () => {
+      console.log(new Date().toISOString(), "[chat] send shortcut received; phase", phase);
       if (phase !== "idle") return;
       void chatDraft
         .paste(() => clipboard.readText(), pasteIntoLMU)
-        .then(() => notify("Chat send sequence completed."))
+        .then(() => {
+          console.log(
+            new Date().toISOString(),
+            "[chat] helper completed",
+            process.env.SOTTO_LMU_CHAT_NO_SEND === "1" ? "no-send" : "send",
+          );
+          notify(
+            process.env.SOTTO_LMU_CHAT_NO_SEND === "1"
+              ? "Typing test completed; message not sent."
+              : "Chat send sequence completed.",
+          );
+        })
         .catch((error) => {
+          console.error(
+            new Date().toISOString(),
+            "[chat] failed",
+            error instanceof Error ? error.message : "Unknown failure",
+          );
           notify(error instanceof Error ? error.message : "Chat paste failed.");
         });
     })
@@ -271,7 +289,14 @@ ipcMain.handle("sotto:finish", async (event, id: unknown) => {
   setPhase("processing");
   try {
     const result = await current.finish();
-    if (session === current && result.delivery === "copied") chatDraft.ready(result.transcript);
+    if (session === current && result.delivery === "copied") {
+      chatDraft.ready(result.transcript);
+      console.log(
+        new Date().toISOString(),
+        "[chat] fresh transcript ready; characters",
+        result.transcript.length,
+      );
+    }
     notify(result.delivery === "copied" ? "Copied to clipboard" : "No speech detected.");
     return result;
   } catch (error) {

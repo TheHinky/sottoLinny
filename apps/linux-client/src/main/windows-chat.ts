@@ -16,6 +16,7 @@ export function pasteIntoLMU(text: string): Promise<void> {
       new Error("SOTTO_LMU_CHAT_KEY must be ENTER, NONE, or one letter/digit."),
     );
   return new Promise((resolve, reject) => {
+    console.log(new Date().toISOString(), "[chat] starting typing helper; characters", text.length);
     const child = spawn(
       "powershell.exe",
       [
@@ -48,6 +49,8 @@ export function pasteIntoLMU(text: string): Promise<void> {
     });
     child.on("exit", (code) => {
       clearTimeout(timeout);
+      console.log(new Date().toISOString(), "[chat] helper exit", code);
+      if (code !== 0) console.error(new Date().toISOString(), "[chat] helper diagnostic", error);
       if (code === 0) resolve();
       else
         reject(
