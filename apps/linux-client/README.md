@@ -8,6 +8,7 @@ KDE Plasma Wayland prototype. Connects to an independently running Sotto server,
 - Tray icon (KDE system tray); closing the window hides it, **Quit** is in the tray menu
 - Global shortcuts through the xdg-desktop-portal GlobalShortcuts D-Bus API (not Electron `globalShortcut`, which registers unnamed per-launch entries): `Meta+Alt+Space` toggles recording, `Meta+Alt+Escape` cancels. KDE asks to confirm them on first launch; change them in System Settings → Shortcuts → Sotto Linux
 - Desktop notification with the result when the window is hidden; a **Desktop notifications** checkbox turns them off for this device
+- **Mute speakers while recording** checkbox (off by default, this device only): once the start cue finishes it pauses playing MPRIS media players and mutes the default PipeWire sink with `wpctl`, then restores both once the microphone closes (before the stop cue) or on cancel. Only changes it made are undone; if the app is killed mid-take the sink stays muted
 - Sandboxed Electron renderer with a CommonJS preload and sender-checked IPC
 - Session-scoped cancellation, including delayed creation and in-flight processing
 - FIR low-pass filtering and mono 16 kHz resampling in an AudioWorklet

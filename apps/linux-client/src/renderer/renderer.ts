@@ -21,7 +21,8 @@ const endpoint = input("endpoint"),
   token = input("token"),
   deviceName = input("device-name"),
   proofreading = input("proofreading"),
-  notifications = input("notifications");
+  notifications = input("notifications"),
+  quietOutput = input("quiet-output");
 const startButton = button("start"),
   stopButton = button("stop"),
   cancelButton = button("cancel");
@@ -72,6 +73,14 @@ notifications.addEventListener("change", () => {
   localStorage.setItem("sotto.notifications", notifications.checked ? "on" : "off");
   void window.sotto.setNotifications(notifications.checked);
 });
+quietOutput.checked = localStorage.getItem("sotto.quiet-output") === "on";
+quietOutput.addEventListener("change", () =>
+  localStorage.setItem("sotto.quiet-output", quietOutput.checked ? "on" : "off"),
+);
+// Failures are logged by the main process; a take never fails over speakers.
+function setQuietOutput(take: Take, quiet: boolean) {
+  return window.sotto.quietOutput(take.id, quiet).catch(() => {});
+}
 function configuration(clearToken = true): ClientConfiguration {
   const prefix = navigator.userAgent.includes("Windows") ? "windows" : "linux";
   const deviceID = localStorage.getItem("sotto.device-id") || `${prefix}-${crypto.randomUUID()}`;
@@ -194,8 +203,15 @@ async function openMicrophone(take: Take, keepOriginalAudio: boolean) {
     void finish(take);
   }, 179000);
   status.textContent = "Listening";
-  playCue("start");
+  const cue = playCue("start");
   controls();
+  // Mute after the start cue so it stays audible; the mic already hears the
+  // cue today, so this only adds its ~150 ms of speaker audio to the take.
+  if (quietOutput.checked)
+    window.setTimeout(() => {
+      if (active === take && take.phase === "recording" && !take.cancelled)
+        void setQuietOutput(take, true);
+    }, cue);
 }
 async function flush(take: Take) {
   const worklet = take.worklet;
@@ -222,12 +238,15 @@ async function flush(take: Take) {
 async function finish(take: Take) {
   if (active !== take || take.cancelled || take.phase !== "recording") return;
   take.phase = "finishing";
-  playCue("stop");
   controls();
   status.textContent = "Finishing upload";
   try {
     await flush(take);
     await releaseHardware(take);
+    // The mic is closed, so resumed media is not recorded; unmuting before the
+    // stop cue keeps it audible. No-op if nothing was muted.
+    await setQuietOutput(take, false);
+    playCue("stop");
     await take.queue.drain();
     requireActive(take);
     const result = await window.sotto.finish(take.id);

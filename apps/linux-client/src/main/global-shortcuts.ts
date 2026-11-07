@@ -97,6 +97,8 @@ export async function registerGlobalShortcuts(
   handlers: ShortcutHandlers,
 ): Promise<() => void> {
   const bus = dbus.sessionBus();
+  // dbus-next re-emits socket errors; unhandled they crash the main process.
+  bus.on("error", (error) => console.warn("Shortcut D-Bus error:", error));
   try {
     const portal = await bus.getProxyObject(portalName, portalPath);
 

@@ -15,6 +15,7 @@ const volume = 0.06;
 
 let context: AudioContext | undefined;
 
+/** Plays a cue and returns its length in milliseconds. */
 export function playCue(cue: Cue) {
   const audio = (context ??= new AudioContext());
   void audio.resume();
@@ -31,4 +32,5 @@ export function playCue(cue: Cue) {
     oscillator.start(start);
     oscillator.stop(start + noteSeconds);
   });
+  return (0.01 + notes[cue].length * noteSeconds) * 1000;
 }

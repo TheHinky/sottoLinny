@@ -16,6 +16,7 @@ import { z } from "zod";
 import { ChatDraft } from "./chat-draft.js";
 import { pasteIntoLMU } from "./windows-chat.js";
 import { copyText } from "./clipboard.js";
+import { QuietOutput } from "./quiet-output.js";
 import { loadToken, saveToken } from "./credentials.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
 import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
@@ -48,6 +49,8 @@ let quitting = false;
 type Phase = "idle" | "recording" | "processing";
 let phase: Phase = "idle";
 const chatDraft = new ChatDraft();
+// Speakers muted and media paused during a take; always restored when it ends.
+const quietOutput = new QuietOutput();
 
 // ---- Tray ----
 function setPhase(next: Phase) {
@@ -193,6 +196,7 @@ async function cancelSession(current: RecordingSession) {
   } finally {
     if (session === current) session = undefined;
     if (!session) setPhase("idle");
+    await quietOutput.restore(current.id);
   }
 }
 function createWindow() {
@@ -306,7 +310,15 @@ ipcMain.handle("sotto:finish", async (event, id: unknown) => {
   } finally {
     if (session === current) session = undefined;
     if (!session) setPhase("idle");
+    // The renderer restores once the mic closes; this covers anything it missed.
+    await quietOutput.restore(current.id);
   }
+});
+ipcMain.handle("sotto:quiet-output", async (event, id: unknown, quiet: unknown) => {
+  requireSender(event);
+  const current = currentSession(id);
+  if (z.boolean().parse(quiet)) await quietOutput.silence(current.id);
+  else await quietOutput.restore(current.id);
 });
 ipcMain.handle("sotto:cancel", async (event, id: unknown) => {
   requireSender(event);

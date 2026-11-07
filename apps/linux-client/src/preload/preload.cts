@@ -33,6 +33,10 @@ const api = {
   finish(sessionID: string): Promise<RecordingResult> {
     return ipcRenderer.invoke("sotto:finish", sessionID);
   },
+  // Pause media and mute the default speaker for this take, or undo it.
+  quietOutput(sessionID: string, quiet: boolean): Promise<void> {
+    return ipcRenderer.invoke("sotto:quiet-output", sessionID, quiet);
+  },
   cancel(sessionID: string): Promise<void> {
     return ipcRenderer.invoke("sotto:cancel", sessionID);
   },
