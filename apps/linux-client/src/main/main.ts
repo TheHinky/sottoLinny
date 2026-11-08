@@ -19,9 +19,19 @@ import { copyText } from "./clipboard.js";
 import { QuietOutput } from "./quiet-output.js";
 import { loadToken, saveToken } from "./credentials.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
-import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
+import {
+  configurationSchema,
+  overlayPositionSchema,
+  sessionIDSchema,
+} from "../shared/validation.js";
 import { RecordingSession } from "./recording-session.js";
-import { destroyStatusOverlay, flashStatus, idleStatus, showStatus } from "./status-overlay.js";
+import {
+  destroyStatusOverlay,
+  flashStatus,
+  idleStatus,
+  setOverlayPosition,
+  showStatus,
+} from "./status-overlay.js";
 import { SottoServerClient } from "./server-client.js";
 
 // ---- App identity ----
@@ -272,6 +282,10 @@ ipcMain.handle("sotto:proofreading", async (event, configuration: unknown, enabl
 ipcMain.handle("sotto:notifications", (event, enabled: unknown) => {
   requireSender(event);
   notificationsEnabled = z.boolean().parse(enabled);
+});
+ipcMain.handle("sotto:overlay-position", (event, position: unknown) => {
+  requireSender(event);
+  setOverlayPosition(overlayPositionSchema.parse(position));
 });
 ipcMain.handle("sotto:token-saved", (event) => {
   requireSender(event);

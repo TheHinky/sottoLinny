@@ -5,6 +5,7 @@ import type {
   ClientEvent,
   RecordingResult,
 } from "../shared/types.js";
+import type { OverlayPosition } from "../shared/validation.js";
 
 const api = {
   start(
@@ -19,6 +20,9 @@ const api = {
   },
   setNotifications(enabled: boolean): Promise<void> {
     return ipcRenderer.invoke("sotto:notifications", enabled);
+  },
+  setOverlayPosition(position: OverlayPosition): Promise<void> {
+    return ipcRenderer.invoke("sotto:overlay-position", position);
   },
   tokenSaved(): Promise<boolean> {
     return ipcRenderer.invoke("sotto:token-saved");

@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const sessionIDSchema = z.string().uuid();
+// Where the status pill sits; see src/main/status-overlay.ts.
+export const overlayPositionSchema = z.enum(["center", "above-taskbar", "over-taskbar"]);
+export type OverlayPosition = z.infer<typeof overlayPositionSchema>;
 export const configurationSchema = z
   .object({
     endpoint: z.string().min(1).max(4096),

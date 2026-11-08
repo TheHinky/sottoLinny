@@ -1,18 +1,20 @@
 import { join } from "node:path";
 import { BrowserWindow, screen } from "electron";
+import type { OverlayPosition } from "../shared/validation.js";
 
 // ---- Status overlay ----
-// Small pill at the bottom centre of the screen: Recording → Processing → a
-// short result flash → hidden. One window, created on first use and reused;
-// hidden between takes so it costs no rendering. On KDE Wayland apps cannot
-// position windows, so the KWin script in assets/kwin-overlay (installed by
-// scripts/install-desktop.ts) places it by matching the page title.
+// Small pill: Recording → Processing → a short result flash → hidden. One
+// window, created on first use and reused; hidden between takes so it costs no
+// rendering. On KDE Wayland apps cannot position windows, so the KWin script in
+// assets/kwin-overlay (installed by scripts/install-desktop.ts) places it. The
+// window title carries the chosen position for that script:
+// "Sotto Status: <position>".
 export type OverlayStatus = "recording" | "processing" | "copied" | "no-speech" | "failed";
 
 const pagePath = join(import.meta.dirname, "../renderer/overlay.html");
 const width = 168;
 const height = 40;
-const gap = 12;
+const gap = 4;
 const flashMs = 1500;
 
 let window: BrowserWindow | undefined;
@@ -21,6 +23,8 @@ let hideTimer: NodeJS.Timeout | undefined;
 // Latest requested status; a slower show() that finishes after a newer
 // show/hide must not override it.
 let wanted: OverlayStatus | undefined;
+let position: OverlayPosition = "above-taskbar";
+const title = () => `Sotto Status: ${position}`;
 
 function ensureWindow() {
   if (window && !window.isDestroyed()) return window;
@@ -39,22 +43,35 @@ function ensureWindow() {
     skipTaskbar: true,
     alwaysOnTop: true,
     hasShadow: false,
-    title: "Sotto Status",
+    title: title(),
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
   });
   window.setIgnoreMouseEvents(true);
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event) => event.preventDefault());
+  // Keep our title; the page's <title> would drop the position.
+  window.on("page-title-updated", (event) => event.preventDefault());
   loaded = window.loadFile(pagePath);
   return window;
 }
 
 // Honoured on X11 and Windows; Wayland ignores it and KWin places the window.
-function placeNearCursor(target: BrowserWindow) {
-  const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+// Mirrors the positions in assets/kwin-overlay/contents/code/main.js, on the
+// display under the cursor.
+function place(target: BrowserWindow) {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const usable = display.workArea;
+  const full = display.bounds;
+  let y = usable.y + usable.height - height - gap;
+  if (position === "center") {
+    y = usable.y + (usable.height - height) / 2;
+  } else if (position === "over-taskbar") {
+    const strip = full.y + full.height - (usable.y + usable.height);
+    y = full.y + full.height - (strip >= height ? (strip + height) / 2 : height + gap);
+  }
   target.setBounds({
-    x: Math.round(area.x + (area.width - width) / 2),
-    y: area.y + area.height - height - gap,
+    x: Math.round(usable.x + (usable.width - width) / 2),
+    y: Math.round(y),
     width,
     height,
   });
@@ -71,7 +88,7 @@ async function show(status: OverlayStatus) {
   );
   if (target.isDestroyed() || wanted !== status) return;
   if (!target.isVisible()) {
-    placeNearCursor(target);
+    place(target);
     target.showInactive();
   }
 }
@@ -99,6 +116,14 @@ export function flashStatus(status: "copied" | "no-speech" | "failed") {
 // Idle hides immediately unless a result flash is still counting down.
 export function idleStatus() {
   if (!hideTimer) hide();
+}
+// A visible pill moves straight away (KWin watches the title); otherwise the
+// position applies on the next show.
+export function setOverlayPosition(next: OverlayPosition) {
+  position = next;
+  if (!window || window.isDestroyed()) return;
+  window.setTitle(title());
+  if (window.isVisible()) place(window);
 }
 export function destroyStatusOverlay() {
   hide();

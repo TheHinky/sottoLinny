@@ -1,4 +1,5 @@
 import type { AudioChunk, ClientConfiguration } from "../shared/types.js";
+import type { OverlayPosition } from "../shared/validation.js";
 import { playCue } from "./cues.js";
 import { UploadQueue } from "./upload-queue.js";
 
@@ -72,6 +73,20 @@ void window.sotto.setNotifications(notifications.checked);
 notifications.addEventListener("change", () => {
   localStorage.setItem("sotto.notifications", notifications.checked ? "on" : "off");
   void window.sotto.setNotifications(notifications.checked);
+});
+// The renderer has no bundler, so no zod here; the options in index.html are
+// the allowed values and the main process validates with overlayPositionSchema.
+const overlayPosition = element("overlay-position");
+if (!(overlayPosition instanceof HTMLSelectElement)) throw new Error("overlay-position");
+const savedPosition = localStorage.getItem("sotto.overlay-position");
+if (Array.from(overlayPosition.options).some((option) => option.value === savedPosition))
+  overlayPosition.value = savedPosition ?? "";
+const setOverlayPosition = () =>
+  void window.sotto.setOverlayPosition(overlayPosition.value as OverlayPosition);
+setOverlayPosition();
+overlayPosition.addEventListener("change", () => {
+  localStorage.setItem("sotto.overlay-position", overlayPosition.value);
+  setOverlayPosition();
 });
 quietOutput.checked = localStorage.getItem("sotto.quiet-output") === "on";
 quietOutput.addEventListener("change", () =>

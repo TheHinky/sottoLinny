@@ -31,8 +31,8 @@ console.log(`Installed ${target}`);
 // ---- KWin status overlay ----
 // Wayland apps cannot position their own windows or refuse focus, so on KDE:
 // a KWin script keeps the status pill at the bottom centre, and a window rule
-// stops KWin from giving it keyboard focus. Both match the "Sotto Status"
-// title. Skipped outside KDE.
+// stops KWin from giving it keyboard focus. Both match titles starting with
+// "Sotto Status" (the client appends the chosen position). Skipped outside KDE.
 const run = (command: string, args: string[]) => spawnSync(command, args, { encoding: "utf8" });
 if (run("kwriteconfig6", ["--help"]).status === 0) {
   const scriptDir = join(dataHome, "kwin/scripts/sotto-overlay");
@@ -62,7 +62,7 @@ if (run("kwriteconfig6", ["--help"]).status === 0) {
   const rule: Record<string, string> = {
     Description: "Sotto status overlay",
     title: "Sotto Status",
-    titlematch: "1", // exact
+    titlematch: "2", // substring; the title ends with the position
     acceptfocus: "false",
     acceptfocusrule: "2", // force
   };
