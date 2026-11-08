@@ -21,6 +21,7 @@ import { loadToken, saveToken } from "./credentials.js";
 import { registerGlobalShortcuts } from "./global-shortcuts.js";
 import { configurationSchema, sessionIDSchema } from "../shared/validation.js";
 import { RecordingSession } from "./recording-session.js";
+import { destroyStatusOverlay, flashStatus, idleStatus, showStatus } from "./status-overlay.js";
 import { SottoServerClient } from "./server-client.js";
 
 // ---- App identity ----
@@ -61,6 +62,8 @@ function setPhase(next: Phase) {
     next === "idle" ? "Sotto" : next === "recording" ? "Sotto: recording" : "Sotto: processing",
   );
   updateTrayMenu();
+  if (next === "idle") idleStatus();
+  else showStatus(next);
 }
 function updateTrayMenu() {
   tray?.setContextMenu(
@@ -253,6 +256,7 @@ ipcMain.handle("sotto:start", async (event, id: unknown, configuration: unknown)
   try {
     return await current.start();
   } catch (error) {
+    flashStatus("failed");
     await cancelSession(current).catch(console.error);
     notify(error instanceof Error ? error.message : "Recording failed.");
     throw error;
@@ -301,9 +305,11 @@ ipcMain.handle("sotto:finish", async (event, id: unknown) => {
         result.transcript.length,
       );
     }
+    flashStatus(result.delivery === "copied" ? "copied" : "no-speech");
     notify(result.delivery === "copied" ? "Copied to clipboard" : "No speech detected.");
     return result;
   } catch (error) {
+    flashStatus("failed");
     await cancelSession(current).catch(console.error);
     notify(error instanceof Error ? error.message : "Transcription failed.");
     throw error;
@@ -356,7 +362,10 @@ app.on("second-instance", showWindow);
 app.on("window-all-closed", () => {
   if (!tray) app.quit();
 });
-app.on("will-quit", () => unregisterShortcuts?.());
+app.on("will-quit", () => {
+  unregisterShortcuts?.();
+  destroyStatusOverlay();
+});
 app.on("before-quit", (event) => {
   quitting = true;
   if (!session) return;

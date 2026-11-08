@@ -1,0 +1,11 @@
+{
+  "KPlugin": {
+    "Id": "sotto-overlay",
+    "Name": "Sotto status overlay",
+    "Description": "Keeps the Sotto recording status pill at the bottom centre of the screen.",
+    "License": "MIT"
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "KPackageStructure": "KWin/Script"
+}

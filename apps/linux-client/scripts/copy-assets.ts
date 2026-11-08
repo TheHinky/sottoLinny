@@ -11,6 +11,10 @@ await Promise.all([
     new URL("../dist/renderer/styles.css", import.meta.url),
   ),
   cp(
+    new URL("../src/renderer/overlay.html", import.meta.url),
+    new URL("../dist/renderer/overlay.html", import.meta.url),
+  ),
+  cp(
     new URL("../src/renderer/audio-worklet.js", import.meta.url),
     new URL("../dist/renderer/audio-worklet.js", import.meta.url),
   ),
